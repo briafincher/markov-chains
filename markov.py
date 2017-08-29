@@ -15,7 +15,7 @@ def open_and_read_file(file_path):
         return text.read()
 
 
-def make_chains(text_string):
+def make_chains(text_string, n):
     """Take input text as string; return dictionary of Markov chains.
 
     A chain will be a key that consists of a tuple of (word1, word2)
@@ -44,9 +44,9 @@ def make_chains(text_string):
 
     words = text_string.split()
 
-    for i in range(len(words) - 2):
-        bigram = (words[i], words[i+1])
-        chains[bigram] = chains.get(bigram, []) + [words[i+2]]
+    for i in range(len(words) - n):
+        n_gram = tuple(words[i:i+n])
+        chains[n_gram] = chains.get(n_gram, []) + [words[i+n]]
 
     return chains
 
@@ -56,22 +56,22 @@ def make_text(chains):
 
     words = []
 
-    # Chooses a random bigram
-    starting_bigram = choice(chains.keys())
+    # Chooses a random n gram
+    starting_n_gram = choice(chains.keys())
 
     while True:
         try:
-            # Chooses next word from words that follow bigram
-            next_word = choice(chains[starting_bigram])
+            # Chooses next word from words that follow n gram
+            next_word = choice(chains[starting_n_gram])
         except KeyError:
-            words += list(starting_bigram)
+            words += list(starting_n_gram)
             break
 
         # Adds first word in tuple to list of words
-        words += [starting_bigram[0]]
+        words += [starting_n_gram[0]]
 
-        # Updates bigram
-        starting_bigram = (starting_bigram[1], next_word)
+        # Updates n gram
+        starting_n_gram = starting_n_gram[1:] + (next_word,)
 
     return " ".join(words)
 
@@ -82,7 +82,9 @@ input_path = sys.argv[1]
 input_text = open_and_read_file(input_path)
 
 # Get a Markov chain
-chains = make_chains(input_text)
+chains = make_chains(input_text, int(sys.argv[2]))
+
+#print chains
 
 # Produce random text
 random_text = make_text(chains)
