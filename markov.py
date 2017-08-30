@@ -40,7 +40,7 @@ def make_chains(text_string, n):
         [None]
     """
 
-    chains = {}
+    # chains = {}
 
     words = text_string.split()
 
@@ -48,16 +48,21 @@ def make_chains(text_string, n):
         n_gram = tuple(words[i:i+n])
         chains[n_gram] = chains.get(n_gram, []) + [words[i+n]]
 
-    return chains
+    # return chains
 
 
-def make_text(chains):
+def make_text(chains, capital_words=True):
     """Return text from chains."""
 
     words = []
 
-    # Chooses a random n gram
-    starting_n_gram = choice(chains.keys())
+    # Chooses a random n gram from n grams that start with capital letters.
+    if capital_words:
+        capital_words = [word_tuple for word_tuple in chains.keys() if
+                         word_tuple[0] == word_tuple[0].capitalize()]
+        starting_n_gram = choice(capital_words)
+    else:
+        starting_n_gram = choice(chains.keys())
 
     while True:
         try:
@@ -68,25 +73,34 @@ def make_text(chains):
             break
 
         # Adds first word in tuple to list of words
+        if (starting_n_gram[0] == starting_n_gram[0].capitalize() and
+            starting_n_gram[0][0] != "I"):
+                words += "\n"
         words += [starting_n_gram[0]]
 
         # Updates n gram
         starting_n_gram = starting_n_gram[1:] + (next_word,)
 
+        #added in to stop infinite loops
+        if len(words) > 1000:
+            break
+
     return " ".join(words)
 
+chains = {}
+input_text = ""
+for arg in sys.argv[2:]:
+    input_path = arg
 
-input_path = sys.argv[1]
+    # Open the file and turn it into one long string
+    input_text = open_and_read_file(input_path)
 
-# Open the file and turn it into one long string
-input_text = open_and_read_file(input_path)
+    # Get a Markov chain
+    make_chains(input_text, int(sys.argv[1]))
 
-# Get a Markov chain
-chains = make_chains(input_text, int(sys.argv[2]))
-
-#print chains
 
 # Produce random text
-random_text = make_text(chains)
+random_text = make_text(chains, capital_words=False)
+
 
 print random_text
